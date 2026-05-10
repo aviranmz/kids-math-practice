@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import heroImg from './assets/hero.png'
 import './App.css'
 import { MathQuestion } from './MathQuestion'
 import {
@@ -37,8 +38,29 @@ export default function App() {
   const [correctCount, setCorrectCount] = useState(0)
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0)
   const [highBeat, setHighBeat] = useState(false)
+  const levelHeadingRef = useRef<HTMLHeadingElement>(null)
+  const operationHeadingRef = useRef<HTMLHeadingElement>(null)
+  const scoreHeadingRef = useRef<HTMLHeadingElement>(null)
+  const previousPhaseRef = useRef<Phase>(phase)
 
   const highScores = loadHighScores()
+
+  useEffect(() => {
+    if (previousPhaseRef.current === phase) {
+      return
+    }
+
+    previousPhaseRef.current = phase
+
+    const headingByPhase = {
+      level: levelHeadingRef.current,
+      operation: operationHeadingRef.current,
+      quiz: null,
+      score: scoreHeadingRef.current,
+    }
+
+    headingByPhase[phase]?.focus()
+  }, [phase])
 
   function startRound(l: LevelId, op: QuestionOp | 'mix') {
     setLevel(l)
@@ -74,13 +96,21 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        <h1 className="title">Kids Math Practice</h1>
-        <p className="tagline">Ten questions — pick a level and go!</p>
+        <img src={heroImg} width="88" height="92" alt="" />
+        <div>
+          <h1 className="title">Kids Math Practice</h1>
+          <p className="tagline">Ten questions — pick a level and go!</p>
+        </div>
       </header>
 
       {phase === 'level' && (
         <section className="panel" aria-labelledby="level-heading">
-          <h2 id="level-heading" className="panel-title">
+          <h2
+            id="level-heading"
+            className="panel-title"
+            tabIndex={-1}
+            ref={levelHeadingRef}
+          >
             Choose level
           </h2>
           <div className="btn-grid">
@@ -103,7 +133,12 @@ export default function App() {
 
       {phase === 'operation' && (
         <section className="panel" aria-labelledby="op-heading">
-          <h2 id="op-heading" className="panel-title">
+          <h2
+            id="op-heading"
+            className="panel-title"
+            tabIndex={-1}
+            ref={operationHeadingRef}
+          >
             What do you want to practice?
           </h2>
           <p className="muted">
@@ -132,7 +167,7 @@ export default function App() {
       )}
 
       {phase === 'quiz' && questions[qIndex] && (
-        <section className="panel quiz-panel">
+        <section className="panel quiz-panel" aria-label="Math question">
           <MathQuestion
             key={`${qIndex}-${questions[qIndex].left}-${questions[qIndex].right}-${questions[qIndex].op}`}
             question={questions[qIndex]}
@@ -152,7 +187,12 @@ export default function App() {
 
       {phase === 'score' && (
         <section className="panel" aria-labelledby="score-heading">
-          <h2 id="score-heading" className="panel-title">
+          <h2
+            id="score-heading"
+            className="panel-title"
+            tabIndex={-1}
+            ref={scoreHeadingRef}
+          >
             Round complete!
           </h2>
           <p className="score-big" aria-live="polite">

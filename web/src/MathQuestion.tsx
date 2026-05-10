@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { Question } from './game'
 import { answerFor, formatQuestion } from './game'
 
@@ -16,6 +16,8 @@ export function MathQuestion({
   onContinue,
 }: Props) {
   const inputId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const continueButtonRef = useRef<HTMLButtonElement>(null)
   const [value, setValue] = useState('')
   const [locked, setLocked] = useState(false)
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle')
@@ -23,6 +25,16 @@ export function MathQuestion({
 
   const correctAnswer = Math.round(answerFor(question))
   const isLast = questionNumber >= totalQuestions
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (locked) {
+      continueButtonRef.current?.focus()
+    }
+  }, [locked])
 
   function submit() {
     if (locked) return
@@ -48,9 +60,9 @@ export function MathQuestion({
       <p className="progress" aria-live="polite">
         Question {questionNumber} of {totalQuestions}
       </p>
-      <p className="prompt" id={`${inputId}-label`}>
+      <h2 className="prompt" id={`${inputId}-question`} tabIndex={-1}>
         <span className="prompt-inner">{formatQuestion(question)} = ?</span>
-      </p>
+      </h2>
 
       <div className="answer-row">
         <label className="sr-only" htmlFor={inputId}>
@@ -58,12 +70,13 @@ export function MathQuestion({
         </label>
         <input
           id={inputId}
+          ref={inputRef}
           type="text"
           inputMode="numeric"
           pattern="[0-9-]*"
           autoComplete="off"
           className="answer-input"
-          aria-labelledby={`${inputId}-label`}
+          aria-describedby={`${inputId}-question`}
           value={value}
           disabled={locked}
           onChange={(e) => setValue(e.target.value.replace(/\s+/g, ''))}
@@ -93,6 +106,7 @@ export function MathQuestion({
           <button
             type="button"
             className="btn wide"
+            ref={continueButtonRef}
             onClick={handleContinue}
           >
             {isLast ? 'See score' : 'Next question'}
